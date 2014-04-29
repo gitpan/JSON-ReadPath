@@ -1,8 +1,8 @@
 package JSON::ReadPath;
-$JSON::ReadPath::VERSION = '1';
+$JSON::ReadPath::VERSION = '2';
 use strict;
 use warnings;
-use JSON::XS qw( decode_json );
+use JSON::XS qw( encode_json decode_json );
 use Mouse;
 use Template;
 
@@ -40,17 +40,17 @@ has config => (
 sub _build_config {
     my $self = shift;
     my $json_str = $self->from_file || $self->string
-      or die "No data";
+        or die "No data";
     return decode_json($json_str);
 }
 
 sub from_file {
     my $self = shift;
     my $file = $self->file
-      or return;
+        or return;
     return if !-f $file;
     open my $FH, "<", $file
-      or return;
+        or return;
     local $/;
     my $string = <$FH>;
     close $FH;
@@ -61,9 +61,13 @@ sub get {
     my $self   = shift;
     my $config = $self->config;
     my $path   = shift
-      or return $config;
+        or return $config;
     my $tt    = Template->new;
     my $value = q{};
+
+    $config->{json}        = \&encode_json;
+    $config->{decode_json} = \&decode_json;
+
     $tt->process( \"[%$path%]", $config, \$value );
     return $value;
 }
